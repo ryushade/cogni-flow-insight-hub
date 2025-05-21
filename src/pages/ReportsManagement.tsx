@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -27,7 +26,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileChart, Search, FileChartPie, Download, MoreVertical, ChevronDown } from "lucide-react";
+import { FileText, Search, FileChartPie, Download, MoreVertical, ChevronDown } from "lucide-react";
 
 // Datos de ejemplo para los informes
 const reportsData = [
@@ -223,7 +222,7 @@ const ReportsManagement = () => {
                               size="sm" 
                               onClick={() => handleGenerateReport(report.id)}
                             >
-                              <FileChart className="h-4 w-4 mr-1" />
+                              <FileText className="h-4 w-4 mr-1" />
                               Generar
                             </Button>
                           ) : (
@@ -268,7 +267,7 @@ const ReportsManagement = () => {
           <div className="flex justify-between items-center mb-6">
             <div className="text-lg font-medium">Plantillas de informes disponibles</div>
             <Button>
-              <FileChart className="mr-2 h-4 w-4" />
+              <FileText className="mr-2 h-4 w-4" />
               Nueva Plantilla
             </Button>
           </div>
