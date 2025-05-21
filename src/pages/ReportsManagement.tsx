@@ -26,7 +26,34 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Search, FileChartPie, Download, MoreVertical, ChevronDown } from "lucide-react";
+import { 
+  FileText, 
+  Search, 
+  FileChartPie, 
+  Download, 
+  MoreVertical,
+  ChevronDown, 
+  Calendar,
+  User,
+  FileCheck,
+  FilePenLine,
+  Mail
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 // Datos de ejemplo para los informes
 const reportsData = [
@@ -38,7 +65,15 @@ const reportsData = [
     date: "2025-05-15", 
     score: "24/30",
     doctor: "Dr. Martínez",
-    status: "Generado" 
+    status: "Generado",
+    notes: "La paciente muestra signos de deterioro cognitivo leve. Se recomienda seguimiento en 3 meses.",
+    categories: [
+      { name: "Orientación", score: 8, maxScore: 10 },
+      { name: "Registro", score: 3, maxScore: 3 },
+      { name: "Atención y Cálculo", score: 4, maxScore: 5 },
+      { name: "Recuerdo", score: 2, maxScore: 3 },
+      { name: "Lenguaje", score: 7, maxScore: 9 }
+    ]
   },
   { 
     id: "2", 
@@ -94,6 +129,8 @@ const ReportsManagement = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [selectedReport, setSelectedReport] = useState<(typeof reportsData)[0] | null>(null);
+  const [reportDetailsOpen, setReportDetailsOpen] = useState(false);
   
   const filteredReports = reportsData.filter(report => {
     const matchesTerm = 
@@ -122,6 +159,21 @@ const ReportsManagement = () => {
     toast({
       title: "Descargando informe",
       description: `El informe ${reportId} se está descargando.`,
+    });
+  };
+
+  const handleViewDetails = (reportId: string) => {
+    const report = reportsData.find(r => r.id === reportId);
+    if (report) {
+      setSelectedReport(report);
+      setReportDetailsOpen(true);
+    }
+  };
+
+  const handleSendEmail = (reportId: string) => {
+    toast({
+      title: "Correo enviado",
+      description: `El informe ${reportId} se ha enviado por email correctamente.`,
     });
   };
   
@@ -226,14 +278,21 @@ const ReportsManagement = () => {
                               Generar
                             </Button>
                           ) : (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleDownloadReport(report.id)}
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              Descargar
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => handleDownloadReport(report.id)}
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Descargar
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Descargar informe PDF</p>
+                              </TooltipContent>
+                            </Tooltip>
                           )}
                           
                           <DropdownMenu>
@@ -243,9 +302,18 @@ const ReportsManagement = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Ver detalles</DropdownMenuItem>
-                              <DropdownMenuItem>Editar</DropdownMenuItem>
-                              <DropdownMenuItem>Enviar por email</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewDetails(report.id)}>
+                                <FileCheck className="h-4 w-4 mr-2" />
+                                Ver detalles
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <FilePenLine className="h-4 w-4 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleSendEmail(report.id)}>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Enviar por email
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -294,6 +362,113 @@ const ReportsManagement = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Report Details Dialog */}
+      <Dialog open={reportDetailsOpen} onOpenChange={setReportDetailsOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Detalles del Informe</span>
+              <Badge variant={selectedReport?.status === "Generado" ? "success" : "warning"}>
+                {selectedReport?.status}
+              </Badge>
+            </DialogTitle>
+            <DialogDescription>
+              Información detallada sobre los resultados de la evaluación
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedReport && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Paciente</p>
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <p className="font-medium">{selectedReport.patientName}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">ID: {selectedReport.patientId}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Fecha</p>
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <p className="font-medium">{selectedReport.date}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Prueba: {selectedReport.test}</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Puntuación Total</p>
+                    <p className="text-xl font-bold">{selectedReport.score}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Médico</p>
+                    <p>{selectedReport.doctor}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {selectedReport.categories && (
+                <div className="space-y-2">
+                  <h3 className="text-md font-medium">Categorías</h3>
+                  <div className="space-y-2">
+                    {selectedReport.categories.map((category, index) => (
+                      <div key={index} className="flex justify-between items-center">
+                        <span>{category.name}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary" 
+                              style={{ width: `${(category.score / category.maxScore) * 100}%` }} 
+                            />
+                          </div>
+                          <span className="text-sm font-medium min-w-[40px] text-right">
+                            {category.score}/{category.maxScore}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <h3 className="text-md font-medium">Notas</h3>
+                <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md">
+                  {selectedReport.notes || "No hay notas disponibles para este informe."}
+                </p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="flex justify-between sm:justify-between gap-2">
+            <Button variant="outline" onClick={() => setReportDetailsOpen(false)}>
+              Cerrar
+            </Button>
+            <div className="flex gap-2">
+              {selectedReport?.status === "Generado" && (
+                <>
+                  <Button variant="outline" onClick={() => handleSendEmail(selectedReport.id)}>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Enviar por Email
+                  </Button>
+                  <Button onClick={() => handleDownloadReport(selectedReport.id)}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Descargar PDF
+                  </Button>
+                </>
+              )}
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
