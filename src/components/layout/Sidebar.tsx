@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,8 @@ import {
   ClipboardList,
   BarChart,
   Home,
-  Calendar
+  Calendar,
+  FileChartPie
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -40,6 +40,11 @@ const navItems: NavItem[] = [
     path: '/resultados',
     label: 'Resultados',
     icon: <BarChart className="h-5 w-5" />
+  },
+  {
+    path: '/informes',
+    label: 'Informes',
+    icon: <FileChartPie className="h-5 w-5" />
   },
   {
     path: '/citas',

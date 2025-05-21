@@ -11,6 +11,7 @@ import TestList from "./pages/TestList";
 import Results from "./pages/Results";
 import TestApp from "./pages/TestApp";
 import PatientTest from "./pages/PatientTest";
+import ReportsManagement from "./pages/ReportsManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/resultados" element={<Results />} />
             <Route path="/test" element={<TestApp />} />
             <Route path="/citas" element={<PatientTest />} />
+            <Route path="/informes" element={<ReportsManagement />} />
           </Route>
           <Route path="/paciente/test/:testId" element={<PatientTest />} />
           <Route path="*" element={<NotFound />} />
