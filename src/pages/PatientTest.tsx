@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { 
@@ -15,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { LogOut } from "lucide-react";
 
 // Estructura base para las preguntas del MMSE para pacientes
 const mmseQuestions = [
@@ -104,9 +104,28 @@ const PatientTest = () => {
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(1200); // 20 minutos en segundos
   const [testComplete, setTestComplete] = useState(false);
+  const [patientName, setPatientName] = useState("María García");
+  const [patientId, setPatientId] = useState("P001");
   
   const currentSection = mmseQuestions[currentSectionIndex];
   const totalSections = mmseQuestions.length;
+  
+  useEffect(() => {
+    // Check if user is authenticated as patient
+    const userType = localStorage.getItem("userType");
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    
+    if (!isLoggedIn || userType !== "patient") {
+      navigate("/login");
+      return;
+    }
+    
+    // Get patient ID from localStorage (would come from login)
+    const storedPatientId = localStorage.getItem("patientId");
+    if (storedPatientId) {
+      setPatientId(storedPatientId);
+    }
+  }, [navigate]);
   
   // Control del tiempo
   useEffect(() => {
@@ -170,6 +189,19 @@ const PatientTest = () => {
     }
   };
   
+  const handleLogout = () => {
+    localStorage.removeItem("userType");
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("patientId");
+    
+    toast({
+      title: "Sesión cerrada",
+      description: "Ha cerrado sesión correctamente",
+    });
+    
+    navigate("/login");
+  };
+  
   const finishTest = () => {
     setTestComplete(true);
     
@@ -185,9 +217,9 @@ const PatientTest = () => {
     // Aquí se enviarían los resultados a la API
     console.log("Resultados de la prueba:", { answers, totalScore, maxScore });
     
-    // Después de un tiempo, redirigir al usuario
+    // Después de un tiempo, redirigir al usuario a sus informes
     setTimeout(() => {
-      navigate('/');
+      navigate(`/paciente/informes/${patientId}`);
     }, 5000);
   };
   
@@ -228,7 +260,7 @@ const PatientTest = () => {
             Sus respuestas han sido registradas correctamente.
           </p>
           <p className="text-center">
-            Será redirigido a la página principal en unos segundos...
+            Será redirigido a la página de sus informes en unos segundos...
           </p>
         </CardContent>
       </Card>
@@ -237,6 +269,22 @@ const PatientTest = () => {
   
   return (
     <div className="container py-8 px-4 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Test Cognitivo</h1>
+          <p className="text-muted-foreground">Paciente: {patientName}</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Salir</span>
+        </Button>
+      </div>
+      
       <Card className="mb-6">
         <CardHeader>
           <div className="flex justify-between items-center">

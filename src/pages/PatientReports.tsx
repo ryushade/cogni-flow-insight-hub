@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Card, 
@@ -41,7 +40,8 @@ import {
   Calendar,
   User,
   FileCheck,
-  Mail
+  Mail,
+  LogOut
 } from "lucide-react";
 
 // Example patient data - in a real app would be fetched based on patient ID
@@ -94,16 +94,37 @@ const patientReports = [
 const PatientReports = () => {
   const { patientId } = useParams();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedReport, setSelectedReport] = useState<(typeof patientReports)[0] | null>(null);
   const [reportDetailsOpen, setReportDetailsOpen] = useState(false);
   const [patientInfo, setPatientInfo] = useState(patientData);
   
   useEffect(() => {
-    // Simulate API call to get patient data based on patientId
+    // Check if user is authenticated as patient
+    const userType = localStorage.getItem("userType");
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    
+    if (!isLoggedIn || userType !== "patient") {
+      navigate("/login");
+    }
+    
+    // In a real app, you would fetch the patient data here using the patientId
     console.log(`Fetching data for patient: ${patientId}`);
-    // In a real app, you would fetch the patient data here
-  }, [patientId]);
+  }, [patientId, navigate]);
+  
+  const handleLogout = () => {
+    localStorage.removeItem("userType");
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("patientId");
+    
+    toast({
+      title: "Sesión cerrada",
+      description: "Ha cerrado sesión correctamente",
+    });
+    
+    navigate("/login");
+  };
   
   const filteredReports = patientReports.filter(report => {
     return (
@@ -143,14 +164,25 @@ const PatientReports = () => {
             Consulte sus informes de evaluaciones cognitivas
           </p>
         </div>
-        <div className="bg-medical-50 p-4 rounded-lg border border-medical-200 flex items-center gap-4">
-          <div className="h-12 w-12 rounded-full bg-medical-200 flex items-center justify-center text-medical-700 font-bold">
-            {patientInfo.name.charAt(0)}
+        <div className="flex items-center gap-4">
+          <div className="bg-medical-50 p-4 rounded-lg border border-medical-200 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-medical-200 flex items-center justify-center text-medical-700 font-bold">
+              {patientInfo.name.charAt(0)}
+            </div>
+            <div>
+              <h2 className="font-medium">{patientInfo.name}</h2>
+              <p className="text-sm text-muted-foreground">ID: {patientInfo.id}</p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-medium">{patientInfo.name}</h2>
-            <p className="text-sm text-muted-foreground">ID: {patientInfo.id}</p>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 whitespace-nowrap"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Cerrar sesión</span>
+          </Button>
         </div>
       </div>
       

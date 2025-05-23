@@ -1,17 +1,32 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 
 export const Header = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const handleNotificationClick = () => {
     toast({
       title: "Notificaciones",
       description: "No hay nuevas notificaciones",
     });
+  };
+  
+  const handleLogout = () => {
+    localStorage.removeItem("userType");
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("patientId");
+    
+    toast({
+      title: "Sesión cerrada",
+      description: "Ha cerrado sesión correctamente",
+    });
+    
+    navigate("/login");
   };
   
   return (
@@ -37,6 +52,16 @@ export const Header = () => {
           >
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-medical-500 rounded-full"></span>
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Cerrar sesión</span>
           </Button>
         </div>
       </div>
