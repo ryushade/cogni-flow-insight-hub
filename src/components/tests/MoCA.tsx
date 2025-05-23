@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -218,7 +219,7 @@ export const MoCA = () => {
           )}
         </div>
         
-        {task.subTasks ? (
+        {task.subTasks && Array.isArray(task.subTasks) ? (
           <div className="ml-4 space-y-4">
             {task.subTasks.map((subTask: any) => (
               <div key={subTask.id} className="flex items-center justify-between">
