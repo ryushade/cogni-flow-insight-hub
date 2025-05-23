@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { 
@@ -9,88 +10,282 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut } from "lucide-react";
 
-// Estructura base para las preguntas del MMSE para pacientes
+// Estructura de las preguntas del MMSE para pacientes
 const mmseQuestions = [
   {
     id: "orientation",
-    title: "Orientación",
+    title: "Orientación Temporal",
     questions: [
-      { id: "year", text: "¿En qué año estamos?", points: 1 },
-      { id: "season", text: "¿En qué estación del año estamos?", points: 1 },
-      { id: "date", text: "¿Qué fecha es hoy?", points: 1 },
-      { id: "day", text: "¿Qué día de la semana es hoy?", points: 1 },
-      { id: "month", text: "¿En qué mes estamos?", points: 1 }
+      { 
+        id: "year", 
+        text: "¿En qué año estamos?", 
+        points: 1,
+        type: "text",
+        expectedAnswer: new Date().getFullYear().toString(),
+        placeholder: "Ejemplo: 2025"
+      },
+      { 
+        id: "season", 
+        text: "¿En qué estación del año estamos?", 
+        points: 1,
+        type: "radio",
+        options: ["Primavera", "Verano", "Otoño", "Invierno"]
+      },
+      { 
+        id: "date", 
+        text: "¿Qué fecha es hoy?", 
+        points: 1,
+        type: "text",
+        placeholder: "Ejemplo: 23 de mayo"
+      },
+      { 
+        id: "day", 
+        text: "¿Qué día de la semana es hoy?", 
+        points: 1,
+        type: "radio",
+        options: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+      },
+      { 
+        id: "month", 
+        text: "¿En qué mes estamos?", 
+        points: 1,
+        type: "radio",
+        options: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+      }
     ]
   },
   {
     id: "location",
-    title: "Ubicación",
+    title: "Orientación Espacial",
     questions: [
-      { id: "country", text: "¿En qué país estamos?", points: 1 },
-      { id: "city", text: "¿En qué ciudad estamos?", points: 1 },
-      { id: "place", text: "¿Dónde estamos ahora?", points: 1 },
-      { id: "floor", text: "¿En qué piso estamos?", points: 1 },
-      { id: "district", text: "¿En qué distrito/colonia estamos?", points: 1 }
+      { 
+        id: "country", 
+        text: "¿En qué país estamos?", 
+        points: 1,
+        type: "text",
+        placeholder: "Escriba el nombre del país"
+      },
+      { 
+        id: "city", 
+        text: "¿En qué ciudad estamos?", 
+        points: 1,
+        type: "text",
+        placeholder: "Escriba el nombre de la ciudad"
+      },
+      { 
+        id: "place", 
+        text: "¿Dónde estamos ahora? (edificio, institución)", 
+        points: 1,
+        type: "text",
+        placeholder: "Ejemplo: hospital, clínica, casa"
+      },
+      { 
+        id: "floor", 
+        text: "¿En qué piso estamos?", 
+        points: 1,
+        type: "number",
+        placeholder: "Ejemplo: 1, 2, 3..."
+      },
+      { 
+        id: "district", 
+        text: "¿En qué distrito/colonia estamos?", 
+        points: 1,
+        type: "text",
+        placeholder: "Escriba el nombre del distrito o colonia"
+      }
     ]
   },
   {
     id: "registration",
     title: "Registro",
-    description: "Memorice estas tres palabras: Papel, Bicicleta, Cuchara",
+    description: "Memorice estas tres palabras: PAPEL, BICICLETA, CUCHARA",
+    instructions: "Lea atentamente las palabras y después escríbalas en los campos.",
     questions: [
-      { id: "object1", text: "¿Recuerda la primera palabra? (Papel)", points: 1 },
-      { id: "object2", text: "¿Recuerda la segunda palabra? (Bicicleta)", points: 1 },
-      { id: "object3", text: "¿Recuerda la tercera palabra? (Cuchara)", points: 1 }
+      { 
+        id: "object1", 
+        text: "Primera palabra", 
+        points: 1,
+        type: "text",
+        expectedAnswer: "PAPEL",
+        placeholder: "Escriba la primera palabra"
+      },
+      { 
+        id: "object2", 
+        text: "Segunda palabra", 
+        points: 1,
+        type: "text",
+        expectedAnswer: "BICICLETA",
+        placeholder: "Escriba la segunda palabra"
+      },
+      { 
+        id: "object3", 
+        text: "Tercera palabra", 
+        points: 1,
+        type: "text",
+        expectedAnswer: "CUCHARA",
+        placeholder: "Escriba la tercera palabra"
+      }
     ]
   },
   {
     id: "attention",
     title: "Atención y Cálculo",
     description: "Reste de 7 en 7 empezando desde 100",
+    instructions: "Escriba el resultado de cada resta.",
     questions: [
-      { id: "calc1", text: "100 - 7 = ?", points: 1 },
-      { id: "calc2", text: "93 - 7 = ?", points: 1 },
-      { id: "calc3", text: "86 - 7 = ?", points: 1 },
-      { id: "calc4", text: "79 - 7 = ?", points: 1 },
-      { id: "calc5", text: "72 - 7 = ?", points: 1 }
+      { 
+        id: "calc1", 
+        text: "100 - 7 = ?", 
+        points: 1,
+        type: "number",
+        expectedAnswer: "93",
+        placeholder: "Escriba el número"
+      },
+      { 
+        id: "calc2", 
+        text: "93 - 7 = ?", 
+        points: 1,
+        type: "number",
+        expectedAnswer: "86",
+        placeholder: "Escriba el número"
+      },
+      { 
+        id: "calc3", 
+        text: "86 - 7 = ?", 
+        points: 1,
+        type: "number",
+        expectedAnswer: "79",
+        placeholder: "Escriba el número"
+      },
+      { 
+        id: "calc4", 
+        text: "79 - 7 = ?", 
+        points: 1,
+        type: "number",
+        expectedAnswer: "72",
+        placeholder: "Escriba el número"
+      },
+      { 
+        id: "calc5", 
+        text: "72 - 7 = ?", 
+        points: 1,
+        type: "number",
+        expectedAnswer: "65",
+        placeholder: "Escriba el número"
+      }
     ]
   },
   {
     id: "recall",
     title: "Recuerdo",
     description: "¿Recuerda las tres palabras que le mencioné antes?",
+    instructions: "Escriba las tres palabras que memorizó anteriormente.",
     questions: [
-      { id: "recall1", text: "Primera palabra (Papel)", points: 1 },
-      { id: "recall2", text: "Segunda palabra (Bicicleta)", points: 1 },
-      { id: "recall3", text: "Tercera palabra (Cuchara)", points: 1 }
+      { 
+        id: "recall1", 
+        text: "Primera palabra", 
+        points: 1,
+        type: "text",
+        expectedAnswer: "PAPEL",
+        placeholder: "Escriba la primera palabra"
+      },
+      { 
+        id: "recall2", 
+        text: "Segunda palabra", 
+        points: 1,
+        type: "text",
+        expectedAnswer: "BICICLETA",
+        placeholder: "Escriba la segunda palabra"
+      },
+      { 
+        id: "recall3", 
+        text: "Tercera palabra", 
+        points: 1,
+        type: "text",
+        expectedAnswer: "CUCHARA",
+        placeholder: "Escriba la tercera palabra"
+      }
     ]
   },
   {
     id: "language",
     title: "Lenguaje",
     questions: [
-      { id: "naming1", text: "¿Qué es esto? (mostrar un lápiz)", points: 1 },
-      { id: "naming2", text: "¿Qué es esto? (mostrar un reloj)", points: 1 },
-      { id: "repeat", text: "Repita: 'Ni sí, ni no, ni pero'", points: 1 },
-      { id: "command1", text: "Tome el papel con la mano derecha", points: 1 },
-      { id: "command2", text: "Dóblelo por la mitad", points: 1 },
-      { id: "command3", text: "Póngalo en el suelo", points: 1 }
+      { 
+        id: "naming1", 
+        text: "¿Qué es esto? (se muestra un lápiz)", 
+        points: 1,
+        type: "text",
+        expectedAnswer: "LAPIZ",
+        image: "/placeholder.svg",
+        placeholder: "Escriba el nombre del objeto"
+      },
+      { 
+        id: "naming2", 
+        text: "¿Qué es esto? (se muestra un reloj)", 
+        points: 1,
+        type: "text",
+        expectedAnswer: "RELOJ",
+        image: "/placeholder.svg",
+        placeholder: "Escriba el nombre del objeto"
+      },
+      { 
+        id: "repeat", 
+        text: "Repita exactamente esta frase: 'Ni sí, ni no, ni pero'", 
+        points: 1,
+        type: "text",
+        expectedAnswer: "NI SI, NI NO, NI PERO",
+        placeholder: "Escriba la frase exactamente igual"
+      },
+      { 
+        id: "command", 
+        text: "Siga estas instrucciones: Tome el papel con la mano derecha, dóblelo por la mitad y póngalo en el suelo", 
+        points: 3,
+        type: "checkbox",
+        instructions: "Marque cada acción que ha realizado:",
+        options: [
+          "He tomado el papel con la mano derecha",
+          "He doblado el papel por la mitad",
+          "He puesto el papel en el suelo"
+        ]
+      }
     ]
   },
   {
     id: "final",
     title: "Lectura, Escritura y Dibujo",
     questions: [
-      { id: "read", text: "Lea y ejecute: 'CIERRE LOS OJOS'", points: 1 },
-      { id: "write", text: "Escriba una frase completa", points: 1 },
-      { id: "copy", text: "Copie el dibujo de los pentágonos intersectados", points: 1 }
+      { 
+        id: "read", 
+        text: "Lea y ejecute lo siguiente:", 
+        instruction: "CIERRE LOS OJOS",
+        points: 1,
+        type: "checkbox",
+        options: ["He cerrado los ojos"]
+      },
+      { 
+        id: "write", 
+        text: "Escriba una frase completa (debe tener sujeto y verbo)", 
+        points: 1,
+        type: "textarea",
+        placeholder: "Escriba aquí su frase..."
+      },
+      { 
+        id: "copy", 
+        text: "Copie este dibujo de los pentágonos intersectados", 
+        points: 1,
+        type: "drawing",
+        image: "/placeholder.svg",
+        instructions: "Utilice el área de dibujo para copiar la figura"
+      }
     ]
   }
 ];
@@ -100,7 +295,7 @@ const PatientTest = () => {
   const navigate = useNavigate();
   const { testId } = useParams();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [answers, setAnswers] = useState<Record<string, any>>({});
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(1200); // 20 minutos en segundos
   const [testComplete, setTestComplete] = useState(false);
@@ -160,7 +355,7 @@ const PatientTest = () => {
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
   
-  const handleAnswer = (questionId: string, value: number) => {
+  const handleAnswerChange = (questionId: string, value: any) => {
     setAnswers(prev => ({
       ...prev,
       [questionId]: value
@@ -205,9 +400,45 @@ const PatientTest = () => {
   const finishTest = () => {
     setTestComplete(true);
     
-    const totalScore = Object.values(answers).reduce((sum, score) => sum + score, 0);
-    const maxScore = mmseQuestions.reduce((acc, section) => 
-      acc + section.questions.reduce((sum, q) => sum + q.points, 0), 0);
+    // Calcular puntuación según las respuestas
+    let totalScore = 0;
+    let maxScore = 0;
+    
+    mmseQuestions.forEach(section => {
+      section.questions.forEach(question => {
+        maxScore += question.points;
+        
+        if (answers[question.id]) {
+          // Verificar respuestas según el tipo de pregunta
+          if (question.type === 'text' && question.expectedAnswer) {
+            const userAnswer = String(answers[question.id]).trim().toUpperCase();
+            const expectedAnswer = question.expectedAnswer.toUpperCase();
+            if (userAnswer === expectedAnswer) {
+              totalScore += question.points;
+            }
+          } else if (question.type === 'number' && question.expectedAnswer) {
+            if (String(answers[question.id]) === question.expectedAnswer) {
+              totalScore += question.points;
+            }
+          } else if (question.type === 'checkbox') {
+            // Para checkboxes, asignar puntos proporcionales según las opciones marcadas
+            const selected = Array.isArray(answers[question.id]) ? answers[question.id].length : 0;
+            const total = question.options ? question.options.length : 1;
+            const points = (selected / total) * question.points;
+            totalScore += Math.round(points);
+          } else if (question.type === 'textarea' || question.type === 'drawing') {
+            // Para texto libre o dibujo, asignamos el punto si hay contenido
+            if (answers[question.id] && answers[question.id].length > 0) {
+              totalScore += question.points;
+            }
+          } else if (question.type === 'radio') {
+            // Para respuestas de opción múltiple simplemente asignamos el punto
+            // En un sistema real, se verificaría la exactitud según el día actual
+            totalScore += question.points;
+          }
+        }
+      });
+    });
     
     toast({
       title: "Prueba completada",
@@ -223,27 +454,127 @@ const PatientTest = () => {
     }, 5000);
   };
   
+  const renderQuestionInput = (question: any) => {
+    switch (question.type) {
+      case 'text':
+        return (
+          <Input 
+            type="text" 
+            id={question.id}
+            placeholder={question.placeholder}
+            value={answers[question.id] || ''}
+            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+            className="mt-2"
+          />
+        );
+        
+      case 'number':
+        return (
+          <Input 
+            type="number" 
+            id={question.id}
+            placeholder={question.placeholder}
+            value={answers[question.id] || ''}
+            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+            className="mt-2"
+          />
+        );
+        
+      case 'textarea':
+        return (
+          <Textarea 
+            id={question.id}
+            placeholder={question.placeholder}
+            value={answers[question.id] || ''}
+            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+            className="mt-2"
+          />
+        );
+        
+      case 'checkbox':
+        return (
+          <div className="space-y-2 mt-2">
+            {question.options?.map((option: string, idx: number) => (
+              <div key={idx} className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id={`${question.id}-${idx}`}
+                  checked={Array.isArray(answers[question.id]) && answers[question.id].includes(option)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setAnswers(prev => {
+                      const current = Array.isArray(prev[question.id]) ? [...prev[question.id]] : [];
+                      if (checked) {
+                        return { ...prev, [question.id]: [...current, option] };
+                      } else {
+                        return { ...prev, [question.id]: current.filter(item => item !== option) };
+                      }
+                    });
+                  }}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <Label htmlFor={`${question.id}-${idx}`}>{option}</Label>
+              </div>
+            ))}
+          </div>
+        );
+        
+      case 'radio':
+        return (
+          <RadioGroup
+            value={answers[question.id] || ''}
+            onValueChange={(value) => handleAnswerChange(question.id, value)}
+            className="grid grid-cols-2 gap-2 mt-2"
+          >
+            {question.options?.map((option: string, idx: number) => (
+              <div key={idx} className="flex items-center space-x-2">
+                <RadioGroupItem value={option} id={`${question.id}-${idx}`} />
+                <Label htmlFor={`${question.id}-${idx}`}>{option}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        );
+        
+      case 'drawing':
+        // Para una implementación simple, usamos un textarea
+        // En una implementación completa, se utilizaría un canvas para dibujar
+        return (
+          <div className="mt-2 space-y-2">
+            {question.image && <img src={question.image} alt="Figura a copiar" className="max-w-[200px] mx-auto mb-4" />}
+            <p className="text-sm text-muted-foreground">{question.instructions}</p>
+            <Textarea 
+              id={question.id}
+              placeholder="Dibujo no disponible en esta versión. Por favor, describa lo que dibujaría."
+              value={answers[question.id] || ''}
+              onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+              className="h-32"
+            />
+          </div>
+        );
+        
+      default:
+        return null;
+    }
+  };
+  
   const renderQuestions = (questions: any[]) => {
     return questions.map((question) => (
       <div key={question.id} className="mb-6 p-4 bg-white rounded-lg shadow-sm">
-        <div className="flex justify-between mb-2">
+        <div className="mb-2">
           <Label className="text-lg font-medium">{question.text}</Label>
+          {question.instruction && (
+            <div className="mt-2 p-2 bg-muted rounded text-center font-bold text-lg">
+              {question.instruction}
+            </div>
+          )}
+          {question.image && question.type !== 'drawing' && (
+            <div className="mt-2 flex justify-center">
+              <img src={question.image} alt="Imagen de referencia" className="max-w-[200px]" />
+            </div>
+          )}
         </div>
         
-        <RadioGroup
-          defaultValue={answers[question.id]?.toString() || ""}
-          className="flex flex-col space-y-2 mt-2"
-          onValueChange={(value) => handleAnswer(question.id, parseInt(value))}
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="1" id={`${question.id}-correct`} />
-            <Label htmlFor={`${question.id}-correct`} className="text-green-600">Correcto</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="0" id={`${question.id}-incorrect`} />
-            <Label htmlFor={`${question.id}-incorrect`} className="text-red-500">Incorrecto</Label>
-          </div>
-        </RadioGroup>
+        {renderQuestionInput(question)}
       </div>
     ));
   };
@@ -312,6 +643,11 @@ const PatientTest = () => {
             <CardDescription className="text-base mt-2">
               {currentSection.description}
             </CardDescription>
+          )}
+          {currentSection.instructions && (
+            <p className="text-sm text-muted-foreground mt-2">
+              {currentSection.instructions}
+            </p>
           )}
         </CardHeader>
         <CardContent>
